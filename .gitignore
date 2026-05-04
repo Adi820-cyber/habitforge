@@ -1,0 +1,9 @@
+node_modules/
+.env
+*.log
+.DS_Store
+extract_docx.py
+extracted_specs.txt
+specs_utf8.txt
+HabitForge_Build_Spec.docx
+HabitForge_Diary_Feature_Spec.docx

@@ -1,0 +1,31 @@
+{
+  "name": "habitforge",
+  "version": "1.0.0",
+  "description": "HabitForge - AI-powered habit tracker PWA",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "seed": "node server/seed/run.js",
+    "vapid": "web-push generate-vapid-keys"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "@supabase/supabase-js": "^2.49.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "groq-sdk": "^1.1.2",
+    "helmet": "^8.0.0",
+    "jspdf": "^4.2.1",
+    "morgan": "^1.10.0",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
