@@ -109,6 +109,22 @@ app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0' });
 });
 
+// Debug endpoint — check which env vars are configured on Render (no secrets exposed)
+app.get('/api/v1/debug/env', (req, res) => {
+  const check = (key) => process.env[key] ? `✅ SET (${process.env[key].substring(0, 15)}...)` : '❌ MISSING';
+  res.json({
+    NODE_ENV: process.env.NODE_ENV || 'not set',
+    SUPABASE_URL: check('SUPABASE_URL'),
+    SUPABASE_ANON_KEY: check('SUPABASE_ANON_KEY'),
+    SUPABASE_SERVICE_ROLE_KEY: check('SUPABASE_SERVICE_ROLE_KEY'),
+    GEMINI_API_KEY: check('GEMINI_API_KEY'),
+    GROQ_API_KEY: check('GROQ_API_KEY'),
+    VAPID_PUBLIC_KEY: check('VAPID_PUBLIC_KEY'),
+    VAPID_PRIVATE_KEY: check('VAPID_PRIVATE_KEY'),
+    VAPID_EMAIL: check('VAPID_EMAIL'),
+  });
+});
+
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, '../public')));
 
