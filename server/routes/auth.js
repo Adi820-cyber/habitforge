@@ -14,51 +14,66 @@ function friendlyAuthError(msg) {
 
 // POST /auth/register
 router.post('/register', async (req, res) => {
-  const { email, password, display_name } = req.body;
-  if (!email || !password || !display_name) {
-    return res.status(400).json({ error: 'Email, password and display name are required' });
-  }
-  if (password.length < 8) {
-    return res.status(400).json({ error: 'Password must be at least 8 characters' });
-  }
+  try {
+    const { email, password, display_name } = req.body;
+    if (!email || !password || !display_name) {
+      return res.status(400).json({ error: 'Email, password and display name are required' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
 
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) return res.status(400).json({ error: friendlyAuthError(error.message) });
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return res.status(400).json({ error: friendlyAuthError(error.message) });
 
-  // Upsert user profile (safe for retries)
-  if (data.user) {
-    await supabaseAdmin.from('users').upsert({
-      id: data.user.id,
-      email,
-      display_name,
-      timezone: req.body.timezone || 'Asia/Kolkata',
-      points: 0
-    }, { onConflict: 'id' });
+    // Upsert user profile (safe for retries)
+    if (data.user) {
+      await supabaseAdmin.from('users').upsert({
+        id: data.user.id,
+        email,
+        display_name,
+        timezone: req.body.timezone || 'Asia/Kolkata',
+        points: 0
+      }, { onConflict: 'id' });
+    }
+
+    return res.status(201).json({
+      message: data.session ? 'Account created!' : 'Account created! Sign in now (or confirm email if required).',
+      user: data.user,
+      session: data.session
+    });
+  } catch (err) {
+    console.error('Register error:', err.message);
+    return res.status(500).json({ error: 'Registration failed. Please try again.' });
   }
-
-  return res.status(201).json({
-    message: data.session ? 'Account created!' : 'Account created! Sign in now (or confirm email if required).',
-    user: data.user,
-    session: data.session
-  });
 });
 
 // POST /auth/login
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return res.status(401).json({ error: friendlyAuthError(error.message) });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return res.status(401).json({ error: friendlyAuthError(error.message) });
 
-  return res.json({ session: data.session, user: data.user });
+    return res.json({ session: data.session, user: data.user });
+  } catch (err) {
+    console.error('Login error:', err.message);
+    return res.status(500).json({ error: 'Login failed. Please try again.' });
+  }
 });
 
 // POST /auth/logout
 router.post('/logout', async (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (token) await supabase.auth.admin?.signOut(token);
-  return res.json({ message: 'Logged out' });
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (token) await supabase.auth.admin?.signOut(token);
+    return res.json({ message: 'Logged out' });
+  } catch (err) {
+    console.error('Logout error:', err.message);
+    return res.json({ message: 'Logged out' });
+  }
 });
 
 // GET /auth/me

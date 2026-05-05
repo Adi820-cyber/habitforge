@@ -1,12 +1,18 @@
 const webpush = require('web-push');
 const { supabaseAdmin } = require('../config/supabase');
 
-if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(
-    process.env.VAPID_EMAIL || 'mailto:aditya@habitforge.app',
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-  );
+let vapidConfigured = false;
+try {
+  if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails(
+      process.env.VAPID_EMAIL || 'mailto:aditya@habitforge.app',
+      process.env.VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
+    );
+    vapidConfigured = true;
+  }
+} catch (err) {
+  console.warn('⚠️  VAPID setup failed (push notifications disabled):', err.message);
 }
 
 async function sendNotification(userId, title, body, data = {}) {

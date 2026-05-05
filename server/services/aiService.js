@@ -1,17 +1,32 @@
 const Groq = require('groq-sdk');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// ── GROQ CLIENT (primary — fast, free, reliable JSON mode) ──
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+let groq = null;
+let genAI = null;
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
-// ── GEMINI CLIENT (fallback) ──
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// ── Safe initialization — don't crash if keys are missing on Render ──
+try {
+  if (process.env.GROQ_API_KEY) {
+    groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  }
+} catch (err) {
+  console.warn('⚠️  Groq SDK init failed:', err.message);
+}
+
+try {
+  if (process.env.GEMINI_API_KEY) {
+    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  }
+} catch (err) {
+  console.warn('⚠️  Gemini SDK init failed:', err.message);
+}
 
 // ─────────────────────────────────────────────
 // Core: call Groq with JSON mode (guaranteed clean JSON)
 // ─────────────────────────────────────────────
 async function callGroq(systemPrompt, userContent) {
+  if (!groq) throw new Error('Groq client not initialized');
   const completion = await groq.chat.completions.create({
     model: GROQ_MODEL,
     messages: [
@@ -38,6 +53,7 @@ function extractJSON(text) {
 }
 
 async function callGemini(prompt) {
+  if (!genAI) throw new Error('Gemini client not initialized');
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
   const result = await model.generateContent(prompt);
   return extractJSON(result.response.text());
